@@ -42,6 +42,34 @@ getCityName record = city record
 getCityCordinate :: CityLocalization -> (Int, Int)
 getCityCordinate record = (lat record, long record)
 
+isRecordNe:: CityLocalization -> Bool
+isRecordNe tree = True
+
+isRecordNo:: CityLocalization -> Bool
+isRecordNo tree = True
+
+isRecordSe:: CityLocalization -> Bool
+isRecordNe tree = True
+
+insertRecord :: CityLocalization -> CityLocalization -> CityLocalization
+insertRecord tree node
+  | isRecordNe tree node =
+    if _NE tree /= Empty 
+    then tree { _NE = insertRecord (_NE tree) node }
+    else tree { _NE = node }
+  | isRecordNo tree node = 
+    if _NE tree /= Empty 
+    then tree { _NE = insertRecord (_NE tree) node }
+    else tree { _NE = node }
+  | isRecordSe tree node =
+    if _NE tree /= Empty 
+    then tree { _NE = insertRecord (_NE tree) node }
+    else tree { _NE = node }
+  | otherwise =
+    if _NE tree /= Empty 
+    then tree { _NE = insertRecord (_NE tree) node }
+    else tree { _NE = node }
+
 -- handleRecords:: Tree -> CityLocalization -> Tree
 -- handleRecords record = do
 -- j :: Bool
@@ -49,32 +77,58 @@ getCityCordinate record = (lat record, long record)
 -- rootTree = "Empty"
 
 
-main :: IO ()
-main = do
-  --recursão para entrada de dados
+run :: Maybe CityLocalization -> IO ()
+run lastRecord = do
   putStrLn "Aperte 'q' para encerrar"
-  putStrLn "Digite o nome de uma cidade:"
-  i <- getLine
+  putStrLn "Digite o nome de uma cidade: "
+  city <- getLine
 
-  if i /= "q"  then do
-    let city = i
+  if city /= "q"  then do
     putStrLn "Digite a latitude"
     inpuLat <- getLine
     let lat = read inpuLat :: Int
 
     putStrLn "Digite a longitude"
     inputLong <- getLine
-    let long = read inputLong :: Int
+    let long = read inpuLong :: Int
 
     let recordCity = createRecord city lat long
-    let teste = "jd"
-    let teste = "df"
-    print teste
 
-    main
+    run (insertRecordOrDefault lastRecord recordCity)
   else do
-    putStrLn "Você saiu!"
+    putStrLn "VocÃª saiu!"
     return ()
+
+main :: IO ()
+main = run Nothing
+
+
+-- main :: IO ()
+-- main = do
+--   --recursão para entrada de dados
+--   putStrLn "Aperte 'q' para encerrar"
+--   putStrLn "Digite o nome de uma cidade:"
+--   i <- getLine
+
+--   if i /= "q"  then do
+--     let city = i
+--     putStrLn "Digite a latitude"
+--     inpuLat <- getLine
+--     let lat = read inpuLat :: Int
+
+--     putStrLn "Digite a longitude"
+--     inputLong <- getLine
+--     let long = read inputLong :: Int
+
+--     let recordCity = createRecord city lat long
+--     let teste = "jd"
+--     let teste = "df"
+--     print teste
+
+--     main
+--   else do
+--     putStrLn "Você saiu!"
+--     return ()
 
 
   -- let (x, y) = (1, 2) in x
