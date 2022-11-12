@@ -10,7 +10,7 @@ data CityLocalization =
       _NO :: CityLocalization,
       _SO :: CityLocalization,
       _SE :: CityLocalization
-    } deriving (Read, Show)
+    } deriving (Read, Show, Eq)
 -- sum [] = 0
 -- sum (x:xs) = x + sum xs
 -- evens [] = 0
@@ -42,32 +42,32 @@ getCityName record = city record
 getCityCordinate :: CityLocalization -> (Int, Int)
 getCityCordinate record = (lat record, long record)
 
-isRecordNe:: CityLocalization -> Bool
-isRecordNe tree = True
+isRecordNe :: CityLocalization -> CityLocalization -> Bool
+isRecordNe tree node = True
 
-isRecordNo:: CityLocalization -> Bool
-isRecordNo tree = True
+isRecordNo :: CityLocalization -> CityLocalization -> Bool
+isRecordNo tree node = True
 
-isRecordSe:: CityLocalization -> Bool
-isRecordNe tree = True
+isRecordSe :: CityLocalization -> CityLocalization -> Bool
+isRecordSe tree node = True
 
-insertRecord :: CityLocalization -> CityLocalization -> CityLocalization
-insertRecord tree node
+insertRecordOrDefault :: CityLocalization -> CityLocalization -> CityLocalization
+insertRecordOrDefault tree node
   | isRecordNe tree node =
     if _NE tree /= Empty 
-    then tree { _NE = insertRecord (_NE tree) node }
+    then tree { _NE = insertRecordOrDefault (_NE tree) node }
     else tree { _NE = node }
   | isRecordNo tree node = 
     if _NE tree /= Empty 
-    then tree { _NE = insertRecord (_NE tree) node }
+    then tree { _NE = insertRecordOrDefault (_NE tree) node }
     else tree { _NE = node }
   | isRecordSe tree node =
     if _NE tree /= Empty 
-    then tree { _NE = insertRecord (_NE tree) node }
+    then tree { _NE = insertRecordOrDefault (_NE tree) node }
     else tree { _NE = node }
   | otherwise =
     if _NE tree /= Empty 
-    then tree { _NE = insertRecord (_NE tree) node }
+    then tree { _NE = insertRecordOrDefault (_NE tree) node }
     else tree { _NE = node }
 
 -- handleRecords:: Tree -> CityLocalization -> Tree
@@ -77,7 +77,7 @@ insertRecord tree node
 -- rootTree = "Empty"
 
 
-run :: Maybe CityLocalization -> IO ()
+run :: CityLocalization -> IO ()
 run lastRecord = do
   putStrLn "Aperte 'q' para encerrar"
   putStrLn "Digite o nome de uma cidade: "
@@ -85,22 +85,22 @@ run lastRecord = do
 
   if city /= "q"  then do
     putStrLn "Digite a latitude"
-    inpuLat <- getLine
-    let lat = read inpuLat :: Int
+    inputLat <- getLine
+    let lat = read inputLat :: Int
 
     putStrLn "Digite a longitude"
     inputLong <- getLine
-    let long = read inpuLong :: Int
+    let long = read inputLong :: Int
 
     let recordCity = createRecord city lat long
 
     run (insertRecordOrDefault lastRecord recordCity)
   else do
-    putStrLn "VocÃª saiu!"
+    putStrLn "Você saiu!"
     return ()
 
 main :: IO ()
-main = run Nothing
+main = run Empty
 
 
 -- main :: IO ()
