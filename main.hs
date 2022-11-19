@@ -37,6 +37,7 @@ teste prevLat prevLong currentLat currentLong = do
 
 
 isRecordNe :: CityLocalization -> CityLocalization -> CityLocalization -> Bool
+isRecordNe tree Empty currentNode = True
 isRecordNe tree prevNode currentNode = validLat && validLong
   where
     prevCoordinates = getCityCordinate prevNode
@@ -50,6 +51,7 @@ isRecordNe tree prevNode currentNode = validLat && validLong
 
 
 isRecordNo :: CityLocalization -> CityLocalization -> CityLocalization -> Bool
+isRecordNo tree Empty currentNode = True
 isRecordNo tree prevNode currentNode = validLat && validLong
   where
     prevCoordinates = getCityCordinate prevNode
@@ -62,6 +64,7 @@ isRecordNo tree prevNode currentNode = validLat && validLong
     validLong = currentLong >= prevLong
 
 isRecordSe :: CityLocalization -> CityLocalization -> CityLocalization -> Bool
+isRecordSe tree Empty currentNode = True
 isRecordSe tree prevNode currentNode = validLat && validLong
   where
     prevCoordinates = getCityCordinate prevNode
@@ -72,6 +75,8 @@ isRecordSe tree prevNode currentNode = validLat && validLong
     currentLong = snd currentCoordinates
     validLat = currentLat  <= prevLat
     validLong =  currentLong < prevLong
+
+
 
 getInfosNE :: CityLocalization -> CityLocalization
 getInfosNE tree = _NE tree
@@ -97,10 +102,78 @@ insertRecordOrDefault tree prevNode node
     then tree { _SO = insertRecordOrDefault (_SO tree) prevNode node }
     else tree { _SO = node }
 
-getPrevRecord :: CityLocalization -> CityLocalization -> CityLocalization -> CityLocalization
-getPrevRecord Empty Empty _ = Empty
-getPrevRecord _ Empty current = current
-getPrevRecord _ prev __ = prev
+isLeaf :: CityLocalization -> Bool
+isLeaf node =  (_NO node == Empty) && (_NE node == Empty) && (_SO node == Empty) && (_SE node == Empty)
+
+verifyPrev :: CityLocalization -> CityLocalization -> CityLocalization -> CityLocalization
+verifyPrev tree node current
+  | node == Empty = tree
+  | isRecordNe node node current =
+    if isLeaf node then node else verifyPrev tree (_NE node) current
+  | isRecordNo node node current =
+    if isLeaf node then node else verifyPrev tree (_NO node) current
+  | isRecordSe node node current =
+    if isLeaf node then node else verifyPrev tree (_SE node) current
+  | otherwise =
+    if isLeaf node then node else verifyPrev tree (_SO node) current
+
+
+  -- | isLeaf node = _NE node
+  -- | isRecordNe node prevNode current =
+  --   if isLeaf (_NE node) then _NE node else verifyPrev (_NE node) (_NE node) current
+  -- | isRecordNo node prevNode current =
+  --   if isLeaf (_NO node) then _NO node else verifyPrev (_NO node) (_NO node) current
+  -- | isRecordSe node prevNode current =
+  --   if isLeaf (_SE node) then _SE node else verifyPrev (_SE node) (_SE node) current
+  -- | otherwise =
+  --   if isLeaf (_SO node) then _SO node else verifyPrev (_SO node) (_SO node) current
+
+
+
+
+  -- if isLeaf node then Empty else Empty
+  -- if isRecordNe node prevNode current then _NE node else verifyPrev (_NE node) (_NE node) current
+  -- if isRecordNo node prevNode current then _NO node else verifyPrev (_NO node) (_NO node) current
+--     else if isRecordNo node prevNode current then _SO node else verifyPrev (_SO node) (_SO node) current
+--     else isRecordNo node prevNode current then _SE node else verifyPrev (_SE node) (_SE node) current
+
+
+
+
+
+
+  -- if isLeaf node 
+  -- then Empty
+  -- else
+  --   if isRecordNe node prevNode current
+  --   then
+  --     if isLeaf (_NE node)
+  --     then _NE node
+  --     else verifyPrev (_NE node) (_NE node) current
+  --   else Empty
+
+
+getPrevRecord :: CityLocalization -> CityLocalization -> CityLocalization
+getPrevRecord Empty _ = Empty
+getPrevRecord tree current =
+  -- | isLeaf tree = Empty
+  verifyPrev tree tree current
+  -- | isRecordNo tree tree current = verifyPrev tree tree current
+  -- | isRecordSe tree (_SE tree) current = verifyPrev tree tree current
+  -- | otherwise = verifyPrev tree tree current
+
+
+  -- let prev = verifyPrev tree Empty current
+  -- if prev == Empty
+  -- then tree
+  -- else prev
+
+
+
+-- getPrevRecord :: CityLocalization -> CityLocalization -> CityLocalization -> CityLocalization
+-- getPrevRecord Empty Empty _ = Empty
+-- getPrevRecord _ Empty current = current
+-- getPrevRecord _ prev __ = prev
 
 run :: CityLocalization -> CityLocalization -> IO ()
 run tree prevRecord = do
@@ -118,9 +191,9 @@ run tree prevRecord = do
     let long = read inputLong :: Int
 
     let currentRecord = createRecord city lat long
-    let prev = getPrevRecord tree prevRecord currentRecord
+    let prev = getPrevRecord tree currentRecord
+    -- print prev
     let updatedTree = insertRecordOrDefault tree prev currentRecord
-    
 
     print "-----------------------------------------------------------------------"
     print "anterior"
