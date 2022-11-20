@@ -1,3 +1,6 @@
+import Debug.Trace
+debug = flip trace
+
 data CityLocalization =
     Empty 
   | Record {
@@ -38,7 +41,7 @@ teste prevLat prevLong currentLat currentLong = do
 
 isRecordNe :: CityLocalization -> CityLocalization -> CityLocalization -> Bool
 isRecordNe tree Empty currentNode = True
-isRecordNe tree prevNode currentNode = validLat && validLong
+isRecordNe tree prevNode currentNode = validLat && validLong `debug` ("NE " ++ show currentLat ++ " >= " ++ show prevLat  ++ " " ++ show currentLong ++ " < " ++ show prevLong)
   where
     prevCoordinates = getCityCordinate prevNode
     currentCoordinates = getCityCordinate currentNode
@@ -47,12 +50,12 @@ isRecordNe tree prevNode currentNode = validLat && validLong
     currentLat = fst currentCoordinates
     currentLong = snd currentCoordinates
     validLat =  currentLat >= prevLat
-    validLong = currentLong <= prevLong
+    validLong = currentLong < prevLong
 
 
 isRecordNo :: CityLocalization -> CityLocalization -> CityLocalization -> Bool
 isRecordNo tree Empty currentNode = True
-isRecordNo tree prevNode currentNode = validLat && validLong
+isRecordNo tree prevNode currentNode = (validLat && validLong) `debug` ("NO " ++ show currentLat ++ " >= " ++ show prevLat  ++ " " ++ show currentLong ++ " >= " ++ show prevLong)
   where
     prevCoordinates = getCityCordinate prevNode
     currentCoordinates = getCityCordinate currentNode
@@ -65,7 +68,7 @@ isRecordNo tree prevNode currentNode = validLat && validLong
 
 isRecordSe :: CityLocalization -> CityLocalization -> CityLocalization -> Bool
 isRecordSe tree Empty currentNode = True
-isRecordSe tree prevNode currentNode = validLat && validLong
+isRecordSe tree prevNode currentNode = validLat && validLong `debug` ("SE " ++ show currentLat ++ " < " ++ show prevLat  ++ " " ++ show currentLong ++ " < " ++ show prevLong)
   where
     prevCoordinates = getCityCordinate prevNode
     currentCoordinates = getCityCordinate currentNode
@@ -73,7 +76,7 @@ isRecordSe tree prevNode currentNode = validLat && validLong
     prevLong = snd prevCoordinates
     currentLat = fst currentCoordinates
     currentLong = snd currentCoordinates
-    validLat = currentLat  <= prevLat
+    validLat = currentLat  < prevLat
     validLong =  currentLong < prevLong
 
 
@@ -87,20 +90,20 @@ insertRecordOrDefault Empty _ node = node
 insertRecordOrDefault tree prevNode node
   | isRecordNe tree prevNode node =
     if _NE tree /= Empty 
-    then tree { _NE = insertRecordOrDefault (_NE tree) prevNode node }
-    else tree { _NE = node }
+    then tree { _NE = insertRecordOrDefault (_NE tree) prevNode node } `debug` (city tree)
+    else tree { _NE = node } `debug` (city tree)
   | isRecordNo tree prevNode node = 
     if _NO tree /= Empty
-    then tree { _NO = insertRecordOrDefault (_NO tree) prevNode node }
-    else tree { _NO = node }
+    then tree { _NO = insertRecordOrDefault (_NO tree) prevNode node } `debug` (city tree)
+    else tree { _NO = node } `debug` (city tree)
   | isRecordSe tree prevNode node =
     if _SE tree /= Empty 
-    then tree { _SE = insertRecordOrDefault (_SE tree) prevNode node }
-    else tree { _SE = node }
+    then tree { _SE = insertRecordOrDefault (_SE tree) prevNode node } `debug` (city tree)
+    else tree { _SE = node } `debug` (city tree)
   | otherwise =
     if _SO tree /= Empty
-    then tree { _SO = insertRecordOrDefault (_SO tree) prevNode node }
-    else tree { _SO = node }
+    then tree { _SO = insertRecordOrDefault (_SO tree) prevNode node } `debug` (city tree)
+    else tree { _SO = node } `debug` (city tree)
 
 isLeaf :: CityLocalization -> Bool
 isLeaf node =  (_NO node == Empty) && (_NE node == Empty) && (_SO node == Empty) && (_SE node == Empty)
