@@ -38,16 +38,8 @@ getCityName record = city record
 getCityCordinate :: CityLocalization -> (Int, Int)
 getCityCordinate record = (lat record, long record)
 
-teste :: Int -> Int -> Int -> Int -> IO ()
-teste prevLat prevLong currentLat currentLong = do
-  print prevLat
-  print prevLong
-  print currentLat
-  print currentLong
-
-
-isRecordNe :: CityLocalization -> CityLocalization -> CityLocalization -> Bool
-isRecordNe tree prevNode currentNode = validLat && validLong
+isRecordNe :: CityLocalization -> CityLocalization -> Bool
+isRecordNe prevNode currentNode = validLat && validLong `debug` ("NE " ++ show currentLat ++ " >= " ++ show prevLat  ++ " " ++ show currentLong ++ " < " ++ show prevLong)
   where
     prevCoordinates = getCityCordinate prevNode
     currentCoordinates = getCityCordinate currentNode
@@ -56,11 +48,11 @@ isRecordNe tree prevNode currentNode = validLat && validLong
     currentLat = fst currentCoordinates
     currentLong = snd currentCoordinates
     validLat =  currentLat >= prevLat
-    validLong = currentLong <= prevLong
+    validLong = currentLong < prevLong
 
 
-isRecordNo :: CityLocalization -> CityLocalization -> CityLocalization -> Bool
-isRecordNo tree prevNode currentNode = validLat && validLong
+isRecordNo :: CityLocalization -> CityLocalization -> Bool
+isRecordNo prevNode currentNode = (validLat && validLong) `debug` ("NO " ++ show currentLat ++ " >= " ++ show prevLat  ++ " " ++ show currentLong ++ " >= " ++ show prevLong)
   where
     prevCoordinates = getCityCordinate prevNode
     currentCoordinates = getCityCordinate currentNode
@@ -71,8 +63,8 @@ isRecordNo tree prevNode currentNode = validLat && validLong
     validLat =  currentLat >= prevLat
     validLong = currentLong >= prevLong
 
-isRecordSe :: CityLocalization -> CityLocalization -> CityLocalization -> Bool
-isRecordSe tree prevNode currentNode = validLat && validLong
+isRecordSe :: CityLocalization -> CityLocalization -> Bool
+isRecordSe prevNode currentNode = validLat && validLong `debug` ("SE " ++ show currentLat ++ " < " ++ show prevLat  ++ " " ++ show currentLong ++ " < " ++ show prevLong)
   where
     prevCoordinates = getCityCordinate prevNode
     currentCoordinates = getCityCordinate currentNode
@@ -80,28 +72,27 @@ isRecordSe tree prevNode currentNode = validLat && validLong
     prevLong = snd prevCoordinates
     currentLat = fst currentCoordinates
     currentLong = snd currentCoordinates
-    validLat = currentLat  <= prevLat
+    validLat = currentLat  < prevLat
     validLong =  currentLong < prevLong
 
 getInfosNE :: CityLocalization -> CityLocalization
 getInfosNE tree = _NE tree
 
-
 insertRecordOrDefault :: CityLocalization -> CityLocalization -> CityLocalization -> CityLocalization
 insertRecordOrDefault Empty _ node = node
 insertRecordOrDefault tree prevNode node
-  | isRecordNe tree prevNode node =
+  | isRecordNe tree node =
     if _NE tree /= Empty 
-    then tree { _NE = insertRecordOrDefault (_NE tree) prevNode node }
-    else tree { _NE = node }
-  | isRecordNo tree prevNode node = 
+    then tree { _NE = insertRecordOrDefault (_NE tree) tree node } `debug` (city tree)
+    else tree { _NE = node } `debug` (city tree)
+  | isRecordNo tree node = 
     if _NO tree /= Empty
-    then tree { _NO = insertRecordOrDefault (_NO tree) prevNode node }
-    else tree { _NO = node }
-  | isRecordSe tree prevNode node =
+    then tree { _NO = insertRecordOrDefault (_NO tree) tree node } `debug` (city tree)
+    else tree { _NO = node } `debug` (city tree)
+  | isRecordSe tree node =
     if _SE tree /= Empty 
-    then tree { _SE = insertRecordOrDefault (_SE tree) prevNode node }
-    else tree { _SE = node }
+    then tree { _SE = insertRecordOrDefault (_SE tree) tree node } `debug` (city tree)
+    else tree { _SE = node } `debug` (city tree)
   | otherwise =
     if _SO tree /= Empty
     then tree { _SO = insertRecordOrDefault (_SO tree) prevNode node }
@@ -214,13 +205,7 @@ run tree prevRecord arrayList = do
     print updatedList
 
     print "-----------------------------------------------------------------------"
-    print "anterior"
-    print prev
-    print "-----------------------------------------------------------------------"
-    print "atual"
-    print currentRecord
-    print "-----------------------------------------------------------------------"
-    print "arvore"
+    -- print "arvore"
     print updatedTree
     print "-----------------------------------------------------------------------"
 
