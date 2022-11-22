@@ -126,29 +126,29 @@ searchByCity :: [(String, (Int, Int))] -> String -> CityInfos
 searchByCity list cityName =
   handleSearch 0 list cityName
 
-isWithinPerimeter :: Int -> Int -> Int -> Int -> Int -> Bool
-isWithinPerimeter latX longX latY longY distance = distance <= calc
-  where
-    calc = sqrt ((latX - latY) ^ 2 + (longX - longY) ^ 2)
+-- isWithinPerimeter :: Int -> Int -> Int -> Int -> Int -> Bool
+-- isWithinPerimeter latX longX latY longY distance = distance <= calc
+--   where
+--     calc = sqrt ((latX - latY) ^ 2 + (longX - longY) ^ 2)
 
-insertList :: [String] -> String -> [String]
-insertList list cityName = list ++ [cityName]
+-- insertList :: [String] -> String -> [String]
+-- insertList list cityName = list ++ [cityName]
 
-handlePerimeterSearch :: Int -> Int -> Int -> Int -> [(String, (Int, Int))] -> [String]
-handlePerimeterSearch index lat long distance list cityList =
-  if isWithinPerimeter lat long latElementList longElementList distance
-    then insertList cityList (fst tuple)
-  else handlePerimeterSearch (index + 1) lat long distance list cityList
+-- handlePerimeterSearch :: Int -> Int -> Int -> Int -> [(String, (Int, Int))] -> [String]
+-- handlePerimeterSearch index lat long distance list cityList =
+--   if isWithinPerimeter lat long latElementList longElementList distance
+--     then insertList cityList (fst tuple)
+--   else handlePerimeterSearch (index + 1) lat long distance list cityList
 
-  where
-    tuple = extractTuple list index
-    coordinates = snd tuple
-    latElementList = fst coordinates
-    longElementList = snd coordinates
+--   where
+--     tuple = extractTuple list index
+--     coordinates = snd tuple
+--     latElementList = fst coordinates
+--     longElementList = snd coordinates
 
-perimeterSearch :: Int -> Int -> Int -> [(String, (Int, Int))] -> [String]
-perimeterSearch lat long distance list =
-  handlePerimeterSearch 0 lat long distance list []
+-- perimeterSearch :: Int -> Int -> Int -> [(String, (Int, Int))] -> [String]
+-- perimeterSearch lat long distance list =
+--   handlePerimeterSearch 0 lat long distance list []
 
 
 run :: CityLocalization -> CityLocalization -> [(String, (Int, Int))] -> IO ()
@@ -183,8 +183,8 @@ run tree prevRecord arrayList = do
     inputDistance <- getLine
     let distance = read inputDistance :: Int
 
-    let listOfCities = perimeterSearch lat long distance arrayList
-    print listOfCities
+    -- let listOfCities = perimeterSearch lat long distance arrayList
+    -- print listOfCities
 
     run tree prevRecord arrayList
   else do
