@@ -95,13 +95,8 @@ insertRecordOrDefault tree prevNode node
     else tree { _SE = node } `debug` (city tree)
   | otherwise =
     if _SO tree /= Empty
-    then tree { _SO = insertRecordOrDefault (_SO tree) prevNode node }
+    then tree { _SO = insertRecordOrDefault (_SO tree) tree node }
     else tree { _SO = node }
-
-getPrevRecord :: CityLocalization -> CityLocalization -> CityLocalization -> CityLocalization
-getPrevRecord Empty Empty _ = Empty
-getPrevRecord _ Empty current = current
-getPrevRecord _ prev __ = prev
 
 insertTupleList :: [(String, (Int, Int))] -> [(String, (Int, Int))] -> [(String, (Int, Int))]
 insertTupleList list xs = list ++ xs
@@ -126,33 +121,41 @@ searchByCity :: [(String, (Int, Int))] -> String -> CityInfos
 searchByCity list cityName =
   handleSearch 0 list cityName
 
--- isWithinPerimeter :: Int -> Int -> Int -> Int -> Int -> Bool
--- isWithinPerimeter latX longX latY longY distance = distance <= calc
---   where
---     calc = sqrt ((latX - latY) ^ 2 + (longX - longY) ^ 2)
+isWithinPerimeter :: Float -> Float -> Int -> Int -> Float -> Bool
+isWithinPerimeter latX longX latY longY distance = distance <= calc `debug` (show ltY ++ " " ++ show lgY)
+  where
+    -- ltX = fromIntegral latX :: Float
+    -- lgX = fromIntegral longX :: Float
+    ltY = fromIntegral latY :: Float
+    lgY = fromIntegral longY :: Float
+    -- t = ((latX - ltY) ^ 2 + (longX - lgY) ^ 2)
+    calc = sqrt ((latX - ltY) ^ 2 + (longX - lgY) ^ 2)
+    -- ((latX - latY) ^ 2 + (longX - longY) ^ 2)
 
--- insertList :: [String] -> String -> [String]
--- insertList list cityName = list ++ [cityName]
+insertList :: [String] -> String -> [String]
+insertList list cityName = list ++ [cityName]
 
--- handlePerimeterSearch :: Int -> Int -> Int -> Int -> [(String, (Int, Int))] -> [String]
--- handlePerimeterSearch index lat long distance list cityList =
---   if isWithinPerimeter lat long latElementList longElementList distance
---     then insertList cityList (fst tuple)
---   else handlePerimeterSearch (index + 1) lat long distance list cityList
+handlePerimeterSearch :: Int -> Float -> Float -> Float -> [(String, (Int, Int))] -> [String] -> Int -> [String]
+handlePerimeterSearch index lat long distance list cityList elementsQuantity =
+  if isWithinPerimeter lat long latElementList longElementList distance
+    then insertList cityList (fst tuple)
+  else if index == elementsQuantity
+    then handlePerimeterSearch (index + 1) lat long distance list cityList elementsQuantity
+  else cityList
 
---   where
---     tuple = extractTuple list index
---     coordinates = snd tuple
---     latElementList = fst coordinates
---     longElementList = snd coordinates
+  where
+    tuple = extractTuple list index
+    coordinates = snd tuple 
+    latElementList = fst coordinates
+    longElementList = snd coordinates
 
--- perimeterSearch :: Int -> Int -> Int -> [(String, (Int, Int))] -> [String]
--- perimeterSearch lat long distance list =
---   handlePerimeterSearch 0 lat long distance list []
+perimeterSearch :: Float -> Float -> Float -> [(String, (Int, Int))] -> Int -> [String]
+perimeterSearch lat long distance list elementsQuantity =
+  handlePerimeterSearch 0 lat long distance list [] elementsQuantity
 
 
-run :: CityLocalization -> CityLocalization -> [(String, (Int, Int))] -> IO ()
-run tree prevRecord arrayList = do
+run :: CityLocalization -> CityLocalization -> [(String, (Int, Int))] -> Int -> IO ()
+run tree prevRecord arrayList countElements = do
   putStrLn "Aperte 'q' para encerrar, 'p' para pesquisar por uma cidade ou 'd' para fazer por perímetro"
   putStrLn "Digite o nome de uma cidade: "
   city <- getLine
@@ -168,25 +171,25 @@ run tree prevRecord arrayList = do
     let citySought = searchByCity arrayList citySearch
     print citySought
 
-    run tree prevRecord arrayList
+    run tree prevRecord arrayList countElements
 
   else if city == "d" then do
     putStrLn "Digite uma latitude para a busca"
     inputLat <- getLine
-    let lat = read inputLat :: Int
+    let lat = read inputLat :: Float
 
     putStrLn "Digite uma longitude para a busca"
     inputLong <- getLine
-    let long = read inputLong :: Int
+    let long = read inputLong :: Float
 
     putStrLn "Digite uma distância para a busca"
     inputDistance <- getLine
-    let distance = read inputDistance :: Int
+    let distance = read inputDistance :: Float
 
-    -- let listOfCities = perimeterSearch lat long distance arrayList
-    -- print listOfCities
+    let listOfCities = perimeterSearch lat long distance arrayList countElements
+    print listOfCities
 
-    run tree prevRecord arrayList
+    run tree prevRecord arrayList countElements
   else do
     putStrLn "Digite a latitude"
     inputLat <- getLine
@@ -197,10 +200,10 @@ run tree prevRecord arrayList = do
     let long = read inputLong :: Int
 
     let currentRecord = createRecord city lat long
-    let prev = getPrevRecord tree prevRecord currentRecord
-    let updatedTree = insertRecordOrDefault tree prev currentRecord
+    let updatedTree = insertRecordOrDefault tree tree currentRecord
 
     let cityList = [(city, getCityCordinate currentRecord)]
+    let elementsQuantity = countElements + 1
     let updatedList = insertTupleList arrayList cityList
     print updatedList
 
@@ -209,7 +212,7 @@ run tree prevRecord arrayList = do
     print updatedTree
     print "-----------------------------------------------------------------------"
 
-    run updatedTree currentRecord updatedList
+    run updatedTree currentRecord updatedList elementsQuantity
 
 main :: IO ()
-main = run Empty Empty []
+main = run Empty Empty [] 0
