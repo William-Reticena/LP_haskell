@@ -88,21 +88,21 @@ getInfosNE tree = _NE tree
 insertRecordOrDefault :: CityLocalization -> CityLocalization -> CityLocalization -> CityLocalization
 insertRecordOrDefault Empty _ node = node
 insertRecordOrDefault tree prevNode node
-  | isRecordNe tree prevNode node =
+  | isRecordNe tree tree node =
     if _NE tree /= Empty 
-    then tree { _NE = insertRecordOrDefault (_NE tree) prevNode node } `debug` (city tree)
+    then tree { _NE = insertRecordOrDefault (_NE tree) tree node } `debug` (city tree)
     else tree { _NE = node } `debug` (city tree)
-  | isRecordNo tree prevNode node = 
+  | isRecordNo tree tree node = 
     if _NO tree /= Empty
-    then tree { _NO = insertRecordOrDefault (_NO tree) prevNode node } `debug` (city tree)
+    then tree { _NO = insertRecordOrDefault (_NO tree) tree node } `debug` (city tree)
     else tree { _NO = node } `debug` (city tree)
-  | isRecordSe tree prevNode node =
+  | isRecordSe tree tree node =
     if _SE tree /= Empty 
-    then tree { _SE = insertRecordOrDefault (_SE tree) prevNode node } `debug` (city tree)
+    then tree { _SE = insertRecordOrDefault (_SE tree) tree node } `debug` (city tree)
     else tree { _SE = node } `debug` (city tree)
   | otherwise =
     if _SO tree /= Empty
-    then tree { _SO = insertRecordOrDefault (_SO tree) prevNode node } `debug` (city tree)
+    then tree { _SO = insertRecordOrDefault (_SO tree) tree node } `debug` (city tree)
     else tree { _SO = node } `debug` (city tree)
 
 isLeaf :: CityLocalization -> Bool
@@ -198,14 +198,14 @@ run tree prevRecord = do
     -- print prev
     let updatedTree = insertRecordOrDefault tree prev currentRecord
 
+    --print "-----------------------------------------------------------------------"
+    --print "anterior"
+    --print prev
+    --print "-----------------------------------------------------------------------"
+    --print "atual"
+    --print currentRecord
     print "-----------------------------------------------------------------------"
-    print "anterior"
-    print prev
-    print "-----------------------------------------------------------------------"
-    print "atual"
-    print currentRecord
-    print "-----------------------------------------------------------------------"
-    print "arvore"
+    -- print "arvore"
     print updatedTree
     print "-----------------------------------------------------------------------"
 
