@@ -1,6 +1,10 @@
 import Debug.Trace
 debug = flip trace
 
+--command to input a file
+--cat input.txt | ./main
+
+
 data CityLocalization =
     Empty 
   | Record {
