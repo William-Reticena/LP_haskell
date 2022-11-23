@@ -122,50 +122,17 @@ searchByCity list cityName =
   handleSearch 0 list cityName
 
 isWithinPerimeter :: Float -> Float -> Int -> Int -> Float -> Bool
-isWithinPerimeter latX longX latY longY distance = distance >= calc `debug` ("calc" ++ show calc)
+isWithinPerimeter latX longX latY longY distance = distance >= calc `debug` ("calc " ++ show calc )
   where
-    -- ltX = fromIntegral latX :: Float
-    -- lgX = fromIntegral longX :: Float
-
     ltY = fromIntegral latY :: Float
     lgY = fromIntegral longY :: Float
-    -- t = ((latX - ltY) ^ 2 + (longX - lgY) ^ 2)
-    calc = sqrt ((latX - ltY) ^ 2 + (longX - lgY) ^ 2)
-    -- ((latX - latY) ^ 2 + (longX - longY) ^ 2)
+    calc = sqrt (((latX - ltY) ^ 2) + ((longX - lgY) ^ 2))
 
 insertList :: [String] -> String -> [String]
 insertList list cityName = list ++ [cityName]
 
-handlePerimeterSearch :: Int -> Float -> Float -> Float -> [(String, (Int, Int))] -> [String] -> Int -> [String]
-handlePerimeterSearch index lat long distance list cityList elementsQuantity =
-  if index > (length list)
-    then insertList cityList (fst tuple)
-  else if index == (length list) - 1
-    then cityList `debug` ("city" ++ show cityList ++ " " ++ show (fst tuple) ++ show (length list))
-  else handlePerimeterSearch (index + 1) lat long distance list (insertList cityList (fst tuple)) elementsQuantity
-
-  where
-    tuple = extractTuple list index
-    coordinates = snd tuple 
-    latElementList = fst coordinates
-    longElementList = snd coordinates
-  
-
-
-  -- if isWithinPerimeter lat long latElementList longElementList distance
-  --   then insertList cityList (fst tuple) `debug` ("city" ++ show cityList)
-  -- else if index /= elementsQuantity
-  --   then handlePerimeterSearch (index + 1) lat long distance list cityList elementsQuantity `debug` ("index" ++ show index)
-  -- else cityList
-
-
-perimeterSearch :: Float -> Float -> Float -> [(String, (Int, Int))] -> Int -> [String]
-perimeterSearch lat long distance list elementsQuantity =
-  handlePerimeterSearch 0 lat long distance list [] elementsQuantity
-
-
-run :: CityLocalization -> CityLocalization -> [(String, (Int, Int))] -> Int -> IO ()
-run tree prevRecord arrayList countElements = do
+run :: CityLocalization -> CityLocalization -> [(String, (Int, Int))] -> IO ()
+run tree prevRecord arrayList = do
   putStrLn "Aperte 'q' para encerrar, 'p' para pesquisar por uma cidade ou 'd' para fazer por perímetro"
   putStrLn "Digite o nome de uma cidade: "
   city <- getLine
@@ -181,7 +148,7 @@ run tree prevRecord arrayList countElements = do
     let citySought = searchByCity arrayList citySearch
     print citySought
 
-    run tree prevRecord arrayList countElements
+    run tree prevRecord arrayList
 
   else if city == "d" then do
     putStrLn "Digite uma latitude para a busca"
@@ -196,11 +163,11 @@ run tree prevRecord arrayList countElements = do
     inputDistance <- getLine
     let distance = read inputDistance :: Float
 
-    -- let listOfCities = map (isWithinPerimeter lat long (snd arrayList)) arrayList
-    let listOfCities = perimeterSearch lat long distance arrayList countElements
+    let mapCities = map (\x -> if isWithinPerimeter lat long (fst (snd x)) (snd (snd x)) distance then fst x else "" ) arrayList
+    let listOfCities = filter (\x -> x /= "") mapCities
     print listOfCities
 
-    run tree prevRecord arrayList countElements
+    run tree prevRecord arrayList
   else do
     putStrLn "Digite a latitude"
     inputLat <- getLine
@@ -214,7 +181,6 @@ run tree prevRecord arrayList countElements = do
     let updatedTree = insertRecordOrDefault tree tree currentRecord
 
     let cityList = [(city, getCityCordinate currentRecord)]
-    let elementsQuantity = countElements + 1
     let updatedList = insertTupleList arrayList cityList
     print updatedList
 
@@ -223,7 +189,7 @@ run tree prevRecord arrayList countElements = do
     print updatedTree
     print "-----------------------------------------------------------------------"
 
-    run updatedTree currentRecord updatedList (elementsQuantity - 1)
+    run updatedTree currentRecord updatedList
 
 main :: IO ()
-main = run Empty Empty [] 0
+main = run Empty Empty []
