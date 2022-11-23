@@ -109,7 +109,9 @@ compareCityNames cityName cityNameCp = cityName == cityNameCp
 handleSearch :: Int -> [(String, (Int, Int))] -> String -> Float -> [String]
 handleSearch index list cityName distance =
   if compareCityNames tupleCityName cityName
-    then map (\x -> if isWithinPerimeter tupleCord1 tupleCord2 (fst (snd x)) (snd (snd x)) distance then fst x else "" ) list
+    then 
+      let mapCities =  map (\x -> if isWithinPerimeter tupleCord1 tupleCord2 (fst (snd x)) (snd (snd x)) distance then fst x else "" ) list
+      in filter (\x -> x /= "") mapCities
   else handleSearch (index + 1) list cityName distance
   --CityInfos { name = tupleCityName, coordinates = snd tuple } `debug` ("INFO 1" ++ show tupleCord1 ++  "INFO 2" ++ show tupleCord2)
   where
@@ -118,6 +120,7 @@ handleSearch index list cityName distance =
     tupleCord = snd tuple
     tupleCord1 = fromIntegral (fst tupleCord) :: Float
     tupleCord2 = fromIntegral (snd tupleCord)  :: Float
+    
 
 searchByCity :: [(String, (Int, Int))] -> String -> Float -> [String]
 searchByCity list cityName distance =
