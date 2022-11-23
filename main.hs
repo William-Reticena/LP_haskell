@@ -1,4 +1,3 @@
-
 import Debug.Trace
 debug = flip trace
 
@@ -38,16 +37,8 @@ getCityName record = city record
 getCityCordinate :: CityLocalization -> (Int, Int)
 getCityCordinate record = (lat record, long record)
 
-teste :: Int -> Int -> Int -> Int -> IO ()
-teste prevLat prevLong currentLat currentLong = do
-  print prevLat
-  print prevLong
-  print currentLat
-  print currentLong
-
-
-isRecordNe :: CityLocalization -> CityLocalization -> CityLocalization -> Bool
-isRecordNe tree prevNode currentNode = validLat && validLong
+isRecordNe :: CityLocalization -> CityLocalization -> Bool
+isRecordNe prevNode currentNode = validLat && validLong `debug` ("NE " ++ show currentLat ++ " >= " ++ show prevLat  ++ " " ++ show currentLong ++ " < " ++ show prevLong)
   where
     prevCoordinates = getCityCordinate prevNode
     currentCoordinates = getCityCordinate currentNode
@@ -56,11 +47,11 @@ isRecordNe tree prevNode currentNode = validLat && validLong
     currentLat = fst currentCoordinates
     currentLong = snd currentCoordinates
     validLat =  currentLat >= prevLat
-    validLong = currentLong <= prevLong
+    validLong = currentLong < prevLong
 
 
-isRecordNo :: CityLocalization -> CityLocalization -> CityLocalization -> Bool
-isRecordNo tree prevNode currentNode = validLat && validLong
+isRecordNo :: CityLocalization -> CityLocalization -> Bool
+isRecordNo prevNode currentNode = (validLat && validLong) `debug` ("NO " ++ show currentLat ++ " >= " ++ show prevLat  ++ " " ++ show currentLong ++ " >= " ++ show prevLong)
   where
     prevCoordinates = getCityCordinate prevNode
     currentCoordinates = getCityCordinate currentNode
@@ -71,8 +62,8 @@ isRecordNo tree prevNode currentNode = validLat && validLong
     validLat =  currentLat >= prevLat
     validLong = currentLong >= prevLong
 
-isRecordSe :: CityLocalization -> CityLocalization -> CityLocalization -> Bool
-isRecordSe tree prevNode currentNode = validLat && validLong
+isRecordSe :: CityLocalization -> CityLocalization -> Bool
+isRecordSe prevNode currentNode = validLat && validLong `debug` ("SE " ++ show currentLat ++ " < " ++ show prevLat  ++ " " ++ show currentLong ++ " < " ++ show prevLong)
   where
     prevCoordinates = getCityCordinate prevNode
     currentCoordinates = getCityCordinate currentNode
@@ -80,37 +71,31 @@ isRecordSe tree prevNode currentNode = validLat && validLong
     prevLong = snd prevCoordinates
     currentLat = fst currentCoordinates
     currentLong = snd currentCoordinates
-    validLat = currentLat  <= prevLat
+    validLat = currentLat  < prevLat
     validLong =  currentLong < prevLong
 
 getInfosNE :: CityLocalization -> CityLocalization
 getInfosNE tree = _NE tree
 
-
 insertRecordOrDefault :: CityLocalization -> CityLocalization -> CityLocalization -> CityLocalization
 insertRecordOrDefault Empty _ node = node
 insertRecordOrDefault tree prevNode node
-  | isRecordNe tree prevNode node =
+  | isRecordNe tree node =
     if _NE tree /= Empty 
-    then tree { _NE = insertRecordOrDefault (_NE tree) prevNode node }
-    else tree { _NE = node }
-  | isRecordNo tree prevNode node = 
+    then tree { _NE = insertRecordOrDefault (_NE tree) tree node } `debug` (city tree)
+    else tree { _NE = node } `debug` (city tree)
+  | isRecordNo tree node = 
     if _NO tree /= Empty
-    then tree { _NO = insertRecordOrDefault (_NO tree) prevNode node }
-    else tree { _NO = node }
-  | isRecordSe tree prevNode node =
+    then tree { _NO = insertRecordOrDefault (_NO tree) tree node } `debug` (city tree)
+    else tree { _NO = node } `debug` (city tree)
+  | isRecordSe tree node =
     if _SE tree /= Empty 
-    then tree { _SE = insertRecordOrDefault (_SE tree) prevNode node }
-    else tree { _SE = node }
+    then tree { _SE = insertRecordOrDefault (_SE tree) tree node } `debug` (city tree)
+    else tree { _SE = node } `debug` (city tree)
   | otherwise =
     if _SO tree /= Empty
-    then tree { _SO = insertRecordOrDefault (_SO tree) prevNode node }
+    then tree { _SO = insertRecordOrDefault (_SO tree) tree node }
     else tree { _SO = node }
-
-getPrevRecord :: CityLocalization -> CityLocalization -> CityLocalization -> CityLocalization
-getPrevRecord Empty Empty _ = Empty
-getPrevRecord _ Empty current = current
-getPrevRecord _ prev __ = prev
 
 insertTupleList :: [(String, (Int, Int))] -> [(String, (Int, Int))] -> [(String, (Int, Int))]
 insertTupleList list xs = list ++ xs
@@ -121,44 +106,32 @@ extractTuple list index = list !! index
 compareCityNames :: String -> String -> Bool
 compareCityNames cityName cityNameCp = cityName == cityNameCp
 
-handleSearch :: Int -> [(String, (Int, Int))] -> String -> CityInfos
-handleSearch index list cityName =
+handleSearch :: Int -> [(String, (Int, Int))] -> String -> Float -> [String]
+handleSearch index list cityName distance =
   if compareCityNames tupleCityName cityName
-    then CityInfos { name = tupleCityName, coordinates = snd tuple }
-  else handleSearch (index + 1) list cityName
-
+    then map (\x -> if isWithinPerimeter tupleCord1 tupleCord2 (fst (snd x)) (snd (snd x)) distance then fst x else "" ) list
+  else handleSearch (index + 1) list cityName distance
+  --CityInfos { name = tupleCityName, coordinates = snd tuple } `debug` ("INFO 1" ++ show tupleCord1 ++  "INFO 2" ++ show tupleCord2)
   where
     tuple = extractTuple list index
     tupleCityName = fst tuple
+    tupleCord = snd tuple
+    tupleCord1 = fromIntegral (fst tupleCord) :: Float
+    tupleCord2 = fromIntegral (snd tupleCord)  :: Float
 
-searchByCity :: [(String, (Int, Int))] -> String -> CityInfos
-searchByCity list cityName =
-  handleSearch 0 list cityName
+searchByCity :: [(String, (Int, Int))] -> String -> Float -> [String]
+searchByCity list cityName distance =
+  handleSearch 0 list cityName distance
 
-isWithinPerimeter :: Int -> Int -> Int -> Int -> Int -> Bool
-isWithinPerimeter latX longX latY longY distance = distance <= calc
+isWithinPerimeter :: Float -> Float -> Int -> Int -> Float -> Bool
+isWithinPerimeter latX longX latY longY distance = distance >= calc `debug` ("calc " ++ show calc )
   where
-    calc = sqrt ((latX - latY) ^ 2 + (longX - longY) ^ 2)
+    ltY = fromIntegral latY :: Float
+    lgY = fromIntegral longY :: Float
+    calc = sqrt (((latX - ltY) ^ 2) + ((longX - lgY) ^ 2))
 
 insertList :: [String] -> String -> [String]
 insertList list cityName = list ++ [cityName]
-
-handlePerimeterSearch :: Int -> Int -> Int -> Int -> [(String, (Int, Int))] -> [String]
-handlePerimeterSearch index lat long distance list cityList =
-  if isWithinPerimeter lat long latElementList longElementList distance
-    then insertList cityList (fst tuple)
-  else handlePerimeterSearch (index + 1) lat long distance list cityList
-
-  where
-    tuple = extractTuple list index
-    coordinates = snd tuple
-    latElementList = fst coordinates
-    longElementList = snd coordinates
-
-perimeterSearch :: Int -> Int -> Int -> [(String, (Int, Int))] -> [String]
-perimeterSearch lat long distance list =
-  handlePerimeterSearch 0 lat long distance list []
-
 
 run :: CityLocalization -> CityLocalization -> [(String, (Int, Int))] -> IO ()
 run tree prevRecord arrayList = do
@@ -174,7 +147,11 @@ run tree prevRecord arrayList = do
     putStrLn "Pesquise por uma cidade: "
     citySearch <- getLine
 
-    let citySought = searchByCity arrayList citySearch
+    putStrLn "Digite uma distância para a busca"
+    inputDistance <- getLine
+    let distance = read inputDistance :: Float
+
+    let citySought = searchByCity arrayList citySearch distance
     print citySought
 
     run tree prevRecord arrayList
@@ -182,17 +159,18 @@ run tree prevRecord arrayList = do
   else if city == "d" then do
     putStrLn "Digite uma latitude para a busca"
     inputLat <- getLine
-    let lat = read inputLat :: Int
+    let lat = read inputLat :: Float
 
     putStrLn "Digite uma longitude para a busca"
     inputLong <- getLine
-    let long = read inputLong :: Int
+    let long = read inputLong :: Float
 
     putStrLn "Digite uma distância para a busca"
     inputDistance <- getLine
-    let distance = read inputDistance :: Int
+    let distance = read inputDistance :: Float
 
-    let listOfCities = perimeterSearch lat long distance arrayList
+    let mapCities = map (\x -> if isWithinPerimeter lat long (fst (snd x)) (snd (snd x)) distance then fst x else "" ) arrayList
+    let listOfCities = filter (\x -> x /= "") mapCities
     print listOfCities
 
     run tree prevRecord arrayList
@@ -206,21 +184,14 @@ run tree prevRecord arrayList = do
     let long = read inputLong :: Int
 
     let currentRecord = createRecord city lat long
-    let prev = getPrevRecord tree prevRecord currentRecord
-    let updatedTree = insertRecordOrDefault tree prev currentRecord
+    let updatedTree = insertRecordOrDefault tree tree currentRecord
 
     let cityList = [(city, getCityCordinate currentRecord)]
     let updatedList = insertTupleList arrayList cityList
     print updatedList
 
     print "-----------------------------------------------------------------------"
-    print "anterior"
-    print prev
-    print "-----------------------------------------------------------------------"
-    print "atual"
-    print currentRecord
-    print "-----------------------------------------------------------------------"
-    print "arvore"
+    -- print "arvore"
     print updatedTree
     print "-----------------------------------------------------------------------"
 
