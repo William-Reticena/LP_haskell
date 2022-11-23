@@ -122,10 +122,11 @@ searchByCity list cityName =
   handleSearch 0 list cityName
 
 isWithinPerimeter :: Float -> Float -> Int -> Int -> Float -> Bool
-isWithinPerimeter latX longX latY longY distance = distance <= calc `debug` (show ltY ++ " " ++ show lgY)
+isWithinPerimeter latX longX latY longY distance = distance >= calc `debug` ("calc" ++ show calc)
   where
     -- ltX = fromIntegral latX :: Float
     -- lgX = fromIntegral longX :: Float
+
     ltY = fromIntegral latY :: Float
     lgY = fromIntegral longY :: Float
     -- t = ((latX - ltY) ^ 2 + (longX - lgY) ^ 2)
@@ -137,17 +138,26 @@ insertList list cityName = list ++ [cityName]
 
 handlePerimeterSearch :: Int -> Float -> Float -> Float -> [(String, (Int, Int))] -> [String] -> Int -> [String]
 handlePerimeterSearch index lat long distance list cityList elementsQuantity =
-  if isWithinPerimeter lat long latElementList longElementList distance
+  if index > (length list)
     then insertList cityList (fst tuple)
-  else if index == elementsQuantity
-    then handlePerimeterSearch (index + 1) lat long distance list cityList elementsQuantity
-  else cityList
+  else if index == (length list) - 1
+    then cityList `debug` ("city" ++ show cityList ++ " " ++ show (fst tuple) ++ show (length list))
+  else handlePerimeterSearch (index + 1) lat long distance list (insertList cityList (fst tuple)) elementsQuantity
 
   where
     tuple = extractTuple list index
     coordinates = snd tuple 
     latElementList = fst coordinates
     longElementList = snd coordinates
+  
+
+
+  -- if isWithinPerimeter lat long latElementList longElementList distance
+  --   then insertList cityList (fst tuple) `debug` ("city" ++ show cityList)
+  -- else if index /= elementsQuantity
+  --   then handlePerimeterSearch (index + 1) lat long distance list cityList elementsQuantity `debug` ("index" ++ show index)
+  -- else cityList
+
 
 perimeterSearch :: Float -> Float -> Float -> [(String, (Int, Int))] -> Int -> [String]
 perimeterSearch lat long distance list elementsQuantity =
@@ -186,6 +196,7 @@ run tree prevRecord arrayList countElements = do
     inputDistance <- getLine
     let distance = read inputDistance :: Float
 
+    -- let listOfCities = map (isWithinPerimeter lat long (snd arrayList)) arrayList
     let listOfCities = perimeterSearch lat long distance arrayList countElements
     print listOfCities
 
@@ -212,7 +223,7 @@ run tree prevRecord arrayList countElements = do
     print updatedTree
     print "-----------------------------------------------------------------------"
 
-    run updatedTree currentRecord updatedList elementsQuantity
+    run updatedTree currentRecord updatedList (elementsQuantity - 1)
 
 main :: IO ()
 main = run Empty Empty [] 0
