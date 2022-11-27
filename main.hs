@@ -38,7 +38,7 @@ getCityCordinate :: CityLocalization -> (Int, Int)
 getCityCordinate record = (lat record, long record)
 
 isRecordNe :: CityLocalization -> CityLocalization -> Bool
-isRecordNe prevNode currentNode = validLat && validLong `debug` ("NE " ++ show currentLat ++ " >= " ++ show prevLat  ++ " " ++ show currentLong ++ " < " ++ show prevLong)
+isRecordNe prevNode currentNode = validLat && validLong
   where
     prevCoordinates = getCityCordinate prevNode
     currentCoordinates = getCityCordinate currentNode
@@ -51,7 +51,7 @@ isRecordNe prevNode currentNode = validLat && validLong `debug` ("NE " ++ show c
 
 
 isRecordNo :: CityLocalization -> CityLocalization -> Bool
-isRecordNo prevNode currentNode = (validLat && validLong) `debug` ("NO " ++ show currentLat ++ " >= " ++ show prevLat  ++ " " ++ show currentLong ++ " >= " ++ show prevLong)
+isRecordNo prevNode currentNode = (validLat && validLong)
   where
     prevCoordinates = getCityCordinate prevNode
     currentCoordinates = getCityCordinate currentNode
@@ -63,7 +63,7 @@ isRecordNo prevNode currentNode = (validLat && validLong) `debug` ("NO " ++ show
     validLong = currentLong >= prevLong
 
 isRecordSe :: CityLocalization -> CityLocalization -> Bool
-isRecordSe prevNode currentNode = validLat && validLong `debug` ("SE " ++ show currentLat ++ " < " ++ show prevLat  ++ " " ++ show currentLong ++ " < " ++ show prevLong)
+isRecordSe prevNode currentNode = validLat && validLong
   where
     prevCoordinates = getCityCordinate prevNode
     currentCoordinates = getCityCordinate currentNode
@@ -82,16 +82,16 @@ insertRecordOrDefault Empty _ node = node
 insertRecordOrDefault tree prevNode node
   | isRecordNe tree node =
     if _NE tree /= Empty 
-    then tree { _NE = insertRecordOrDefault (_NE tree) tree node } `debug` (city tree)
-    else tree { _NE = node } `debug` (city tree)
+    then tree { _NE = insertRecordOrDefault (_NE tree) tree node }
+    else tree { _NE = node }
   | isRecordNo tree node = 
     if _NO tree /= Empty
-    then tree { _NO = insertRecordOrDefault (_NO tree) tree node } `debug` (city tree)
-    else tree { _NO = node } `debug` (city tree)
+    then tree { _NO = insertRecordOrDefault (_NO tree) tree node }
+    else tree { _NO = node }
   | isRecordSe tree node =
     if _SE tree /= Empty 
-    then tree { _SE = insertRecordOrDefault (_SE tree) tree node } `debug` (city tree)
-    else tree { _SE = node } `debug` (city tree)
+    then tree { _SE = insertRecordOrDefault (_SE tree) tree node }
+    else tree { _SE = node }
   | otherwise =
     if _SO tree /= Empty
     then tree { _SO = insertRecordOrDefault (_SO tree) tree node }
@@ -110,10 +110,10 @@ handleSearch :: Int -> [(String, (Int, Int))] -> String -> Float -> [String]
 handleSearch index list cityName distance =
   if compareCityNames tupleCityName cityName
     then 
-      let mapCities =  map (\x -> if isWithinPerimeter tupleCord1 tupleCord2 (fst (snd x)) (snd (snd x)) distance then fst x else "" ) list
+      let mapCities = map (\x -> if isWithinPerimeter tupleCord1 tupleCord2 (fst (snd x)) (snd (snd x)) distance then fst x else "" ) list
       in filter (\x -> x /= "") mapCities
   else handleSearch (index + 1) list cityName distance
-  --CityInfos { name = tupleCityName, coordinates = snd tuple } `debug` ("INFO 1" ++ show tupleCord1 ++  "INFO 2" ++ show tupleCord2)
+
   where
     tuple = extractTuple list index
     tupleCityName = fst tuple
@@ -127,7 +127,7 @@ searchByCity list cityName distance =
   handleSearch 0 list cityName distance
 
 isWithinPerimeter :: Float -> Float -> Int -> Int -> Float -> Bool
-isWithinPerimeter latX longX latY longY distance = distance >= calc `debug` ("calc " ++ show calc )
+isWithinPerimeter latX longX latY longY distance = distance >= calc
   where
     ltY = fromIntegral latY :: Float
     lgY = fromIntegral longY :: Float
@@ -138,7 +138,7 @@ insertList list cityName = list ++ [cityName]
 
 run :: CityLocalization -> CityLocalization -> [(String, (Int, Int))] -> IO ()
 run tree prevRecord arrayList = do
-  putStrLn "Aperte 'q' para encerrar, 'p' para pesquisar por uma cidade ou 'd' para fazer por perímetro"
+  putStrLn "Aperte 'q' para encerrar, 'p' para pesquisar por uma cidade ou 'd' para fazer uma busca por perímetro"
   putStrLn "Digite o nome de uma cidade: "
   city <- getLine
 
@@ -191,10 +191,8 @@ run tree prevRecord arrayList = do
 
     let cityList = [(city, getCityCordinate currentRecord)]
     let updatedList = insertTupleList arrayList cityList
-    print updatedList
 
     print "-----------------------------------------------------------------------"
-    -- print "arvore"
     print updatedTree
     print "-----------------------------------------------------------------------"
 
