@@ -74,9 +74,6 @@ isRecordSe prevNode currentNode = validLat && validLong
     validLat = currentLat  < prevLat
     validLong =  currentLong < prevLong
 
-getInfosNE :: CityLocalization -> CityLocalization
-getInfosNE tree = _NE tree
-
 insertRecordOrDefault :: CityLocalization -> CityLocalization -> CityLocalization -> CityLocalization
 insertRecordOrDefault Empty _ node = node
 insertRecordOrDefault tree prevNode node
